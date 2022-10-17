@@ -1,6 +1,9 @@
 package com.example.ctest2.application;
 
+import android.content.Context;
 import android.util.Log;
+
+import androidx.multidex.MultiDex;
 
 import com.clevertap.android.sdk.ActivityLifecycleCallback;
 import com.clevertap.android.sdk.CleverTapAPI;
@@ -40,5 +43,11 @@ public class MyApplication extends FlutterApplication {
         }else{
             Log.e("TAG","CleverTap is NULL");
         }
+    }
+
+    @Override
+    protected void attachBaseContext(Context base) {
+        super.attachBaseContext(base);
+        MultiDex.install(this);
     }
 }
