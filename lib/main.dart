@@ -1,8 +1,11 @@
 import 'dart:convert';
+//import 'dart:html';
 import 'dart:io';
 
 import 'package:flutter/material.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
+import 'package:flutter/services.dart';
+//import 'package:permission_handler/permission_handler.dart';
 
 void main() {
   runApp(const MyApp());
@@ -58,22 +61,48 @@ class _MyHomePageState extends State<MyHomePage> {
   var optOut = false;
   var offLine = false;
   var enableDeviceNetworkingInfo = false;
+  var title = "Home Page";
+//for killed state notification clicked
+  static const platform = MethodChannel("myChannel");
 
   @override
   void initState() {
+
     super.initState();
     initPlatformState();
     activateCleverTapFlutterPluginHandlers();
     CleverTapPlugin.setDebugLevel(3);
     CleverTapPlugin.createNotificationChannel(
         "fluttertest", "Flutter Test", "Flutter Test", 5, true);
+    platform.setMethodCallHandler(nativeMethodCallHandler);
     CleverTapPlugin.initializeInbox();
     CleverTapPlugin.registerForPush(); //only for iOS
-    //var initialUrl = CleverTapPlugin.getInitialUrl();
+    var initialUrl = CleverTapPlugin.getInitialUrl();
+    /*String? string;
+    CleverTapPlugin.getInitialUrl().then((result){
+      string = result;
+    });*/
+
+    print("CleverTap : Initial Url "+initialUrl.toString());
   }
 
   Future<void> initPlatformState() async {
     if (!mounted) return;
+  }
+
+  Future<dynamic> nativeMethodCallHandler(MethodCall methodCall) async {
+    print("CleverTap killed state called!");
+    switch (methodCall.method) {
+      case "onPushNotificationClicked":
+        debugPrint("CleverTap onPushNotificationClicked in dart");
+        var killedPayload = methodCall.arguments;
+        title = methodCall.arguments["action_bar_title"];
+
+        print("CleverTap Clicked Payload in Killed state: ${killedPayload}");
+        return "This is from android!!";
+      default:
+        return "Nothing";
+    }
   }
 
   void activateCleverTapFlutterPluginHandlers() {
@@ -103,21 +132,30 @@ class _MyHomePageState extends State<MyHomePage> {
         .setCleverTapProductConfigFetchedHandler(productConfigFetched);
     _clevertapPlugin
         .setCleverTapProductConfigActivatedHandler(productConfigActivated);
+    _clevertapPlugin.setCleverTapInboxNotificationMessageClickedHandler(inboxNotificationMessageClicked);
   }
 
   void inAppNotificationDismissed(Map<String, dynamic> map) {
+    print("inAppNotificationDismissed called");
     setState(() {
       print("inAppNotificationDismissed called");
     });
   }
 
   void inAppNotificationButtonClicked(Map<String, dynamic>? map) {
+    print("inAppNotificationButtonClicked called");
     setState(() {
       print("inAppNotificationButtonClicked called = ${map.toString()}");
     });
   }
 
   void inboxNotificationButtonClicked(Map<String, dynamic>? map) {
+    setState(() {
+      print("inboxNotificationButtonClicked called = ${map.toString()}");
+    });
+  }
+
+  void inboxNotificationMessageClicked(Map<String, dynamic>? map) {
     setState(() {
       print("inboxNotificationButtonClicked called = ${map.toString()}");
     });
@@ -205,10 +243,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   void pushClickedPayloadReceived(Map<String, dynamic> map) {
-    print("pushClickedPayloadReceived called");
+    print("CleverTap pushClickedPayloadReceived called");
+
     setState(() async {
+      title = map["action_bar_title"];
       var data = jsonEncode(map);
-      print("on Push Click Payload = " + data.toString());
+      print("CleverTap on Push Click Payload = " + data.toString());
     });
   }
 
@@ -235,7 +275,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         // Here we take the value from the MyHomePage object that was created by
         // the App.build method, and use it to set our appbar title.
-        title: Text(widget.title),
+        title: Text(title),
       ),
       body: ListView(
         children: <Widget>[
@@ -250,6 +290,16 @@ class _MyHomePageState extends State<MyHomePage> {
                     "NOTE : All CleverTap functions are listed below"),
                 subtitle: Text(
                     "Please check console logs for more info after tapping below"),
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.lightBlueAccent,
+            child: Padding(
+              padding: const EdgeInsets.all(0.0),
+              child: ListTile(
+                title: Text("Request Permissions"),
+                onTap: requestPermission,
               ),
             ),
           ),
@@ -1124,6 +1174,16 @@ class _MyHomePageState extends State<MyHomePage> {
       '': ''
     };
     CleverTapPlugin.recordEvent("Send Product Display Notification", eventData);
+  }
+
+  Future<void> requestPermission() async {
+    /*Map<Permission, PermissionStatus> statuses = await [
+    Permission.notification
+    //add more permission to request here.
+    ].request();
+    if(statuses[Permission.notification]!.isDenied){ //check each permission status after.
+      print("Notification permission is denied.");
+    }*/
   }
 
   void sendLinearProductDisplayPush() {

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <string name="xiaomi_app_key">5382047861796</string>
-    <string name="xiaomi_app_id">2882303761520478796</string>
+    <string name="xiaomi_app_key">Your Xiaomi APP Key</string>
+    <string name="xiaomi_app_id">Your Xiaomi APP Id</string>
 </resources>

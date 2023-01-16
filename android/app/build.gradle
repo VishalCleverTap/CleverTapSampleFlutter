@@ -62,11 +62,11 @@ flutter {
 
 dependencies {
     implementation 'com.google.firebase:firebase-messaging:23.0.8'
-    implementation 'com.clevertap.android:clevertap-android-sdk:4.6.3'
+    implementation 'com.clevertap.android:clevertap-android-sdk:4.6.6'
     implementation "com.clevertap.android:clevertap-xiaomi-sdk:1.5.0"
     implementation fileTree(include: ["*.jar", "*.aar"], dir: "libs")
     implementation 'androidx.core:core:1.9.0'
-    implementation 'androidx.fragment:fragment:1.5.3'
+    implementation 'androidx.fragment:fragment:1.5.5'
 
 //MANDATORY for App Inbox
     implementation 'androidx.appcompat:appcompat:1.5.1'
@@ -79,9 +79,9 @@ dependencies {
     implementation 'com.android.installreferrer:installreferrer:2.2'
 
 //Optional ExoPlayer Libraries for Audio/Video Inbox Messages. Audio/Video messages will be dropped without these dependencies
-    implementation 'com.google.android.exoplayer:exoplayer:2.18.1'
-    implementation 'com.google.android.exoplayer:exoplayer-hls:2.18.1'
-    implementation 'com.google.android.exoplayer:exoplayer-ui:2.18.1'
+    implementation 'com.google.android.exoplayer:exoplayer:2.17.1'
+    implementation 'com.google.android.exoplayer:exoplayer-hls:2.17.1'
+    implementation 'com.google.android.exoplayer:exoplayer-ui:2.17.1'
 
     implementation "androidx.multidex:multidex:2.0.1"
 }
