@@ -1,11 +1,15 @@
 import 'dart:convert';
 //import 'dart:html';
 import 'dart:io';
+import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:flutter/services.dart';
 //import 'package:permission_handler/permission_handler.dart';
+import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+
+import 'package:shared_preference_app_group/shared_preference_app_group.dart';
 
 void main() {
   runApp(const MyApp());
@@ -64,10 +68,16 @@ class _MyHomePageState extends State<MyHomePage> {
   var title = "Home Page";
 //for killed state notification clicked
   static const platform = MethodChannel("myChannel");
+  late Mixpanel mixpanel;
+  var userId = 1;
+  String appGroupID = 'group.nativeios';
+  Map<String, dynamic> myParams = {
+    'identity': 'null',
+    'email': 'null'
+  };
 
   @override
   void initState() {
-
     super.initState();
     initPlatformState();
     activateCleverTapFlutterPluginHandlers();
@@ -77,13 +87,22 @@ class _MyHomePageState extends State<MyHomePage> {
     platform.setMethodCallHandler(nativeMethodCallHandler);
     CleverTapPlugin.initializeInbox();
     CleverTapPlugin.registerForPush(); //only for iOS
+    CleverTapPlugin.enablePersonalization();
     var initialUrl = CleverTapPlugin.getInitialUrl();
     /*String? string;
     CleverTapPlugin.getInitialUrl().then((result){
       string = result;
     });*/
 
+    initMixpanel();
     print("CleverTap : Initial Url "+initialUrl.toString());
+  }
+
+  Future<void> initMixpanel() async {
+    // Replace with your Project Token
+    // Once you've called this method once, you can access `mixpanel` throughout the rest of your application.
+    mixpanel = await Mixpanel.init("0f5a0ae8c42810c37dca1c8aafef3772",
+        optOutTrackingDefault: false);
   }
 
   Future<void> initPlatformState() async {
@@ -96,9 +115,23 @@ class _MyHomePageState extends State<MyHomePage> {
       case "onPushNotificationClicked":
         debugPrint("CleverTap onPushNotificationClicked in dart");
         var killedPayload = methodCall.arguments;
-        title = methodCall.arguments["action_bar_title"];
+        //title = methodCall.arguments["action_bar_title"];
+        //print("Title : ${title}");
 
         print("CleverTap Clicked Payload in Killed state: ${killedPayload}");
+
+        var parsedJson = jsonDecode(methodCall.arguments.toString());
+
+        print("Parsed json : ${methodCall.arguments['action_bar_title']}");
+
+        var finaltitle = parsedJson['action_bar_title'];
+        print("Title : ${finaltitle}");
+        /*setState(() async {
+          //title = methodCall.arguments["action_bar_title"];
+          //var data = jsonEncode(map);
+          title = finaltitle.toString();
+          //print("CleverTap on Push Click Payload = " + data.toString());
+        });*/
         return "This is from android!!";
       default:
         return "Nothing";
@@ -132,7 +165,7 @@ class _MyHomePageState extends State<MyHomePage> {
         .setCleverTapProductConfigFetchedHandler(productConfigFetched);
     _clevertapPlugin
         .setCleverTapProductConfigActivatedHandler(productConfigActivated);
-    _clevertapPlugin.setCleverTapInboxNotificationMessageClickedHandler(inboxNotificationMessageClicked);
+    //_clevertapPlugin.setCleverTapInboxNotificationMessageClickedHandler(inboxNotificationMessageClicked);
   }
 
   void inAppNotificationDismissed(Map<String, dynamic> map) {
@@ -155,7 +188,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void inboxNotificationMessageClicked(Map<String, dynamic>? map) {
+  void inboxNotificationMessageClicked(Map<String, dynamic> map) {
     setState(() {
       print("inboxNotificationButtonClicked called = ${map.toString()}");
     });
@@ -1117,6 +1150,26 @@ class _MyHomePageState extends State<MyHomePage> {
             child: Padding(
               padding: const EdgeInsets.all(4.0),
               child: ListTile(
+                title: Text("Mixpanel Login"),
+                onTap: sendMixPanelLogin,
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.grey.shade300,
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: ListTile(
+                title: Text("Mixpanel Events"),
+                onTap: sendMixPanelEvent,
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.grey.shade300,
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: ListTile(
                 title: Text("Input Box - reminder - DOC false"),
                 onTap: sendInputBoxReminderDOCFalsePush,
               ),
@@ -1284,6 +1337,19 @@ class _MyHomePageState extends State<MyHomePage> {
       '': ''
     };
     CleverTapPlugin.recordEvent("Send Input Box Reminder DOC true", eventData);
+  }
+
+  void sendMixPanelLogin(){
+    Random random = new Random();
+    if(userId == 1){
+      userId = random.nextInt(1000000000) + 1;
+    }
+
+    mixpanel.identify("${userId}");
+    mixpanel.getPeople().set("CleverTap_user_id", "${userId}");
+  }
+  void sendMixPanelEvent(){
+
   }
 
   void sendInputBoxReminderDOCFalsePush() {
@@ -1675,15 +1741,40 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void onUserLogin() {
     var stuff = ["bags", "shoes"];
+    Random random = Random();
+     userId = random.nextInt(1000000000) + 1;
+     var identity = userId;
+     var email = 'captain$userId@america.com';
     var profile = {
       'Name': 'Captain America',
-      'Identity': '100',
-      'Email': 'captain@america.com',
-      'Phone': '+14155551234',
+      'Identity': identity,
+      'Email': email,
+      //'Phone': '+14155551234',
       'stuff': stuff
     };
     CleverTapPlugin.onUserLogin(profile);
+    SharedPreferenceAppGroup.setString('identity', '$identity');
+    SharedPreferenceAppGroup.setString('email', email);
+    getMyParams();
     print("onUserLogin called, check console for details");
+  }
+
+  void getMyParams() {
+    String identityValue =  SharedPreferenceAppGroup.get('identity') as String;
+    String emailValue =  SharedPreferenceAppGroup.get('email') as String;
+
+    myParams = {
+      'identity': identityValue,
+      'email': emailValue
+    };
+
+    print("From app groups $emailValue");
+
+    String text = '';
+    for (String key in myParams.keys) {
+      text += '$key = ${myParams[key]}\n';
+      print("Inside for loop $text");
+    }
   }
 
   void removeProfileValue() {

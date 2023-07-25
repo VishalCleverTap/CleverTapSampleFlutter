@@ -9,7 +9,7 @@
 
    <application
         android:label="ctest2"
-        android:name=".application.MyApplication"
+        android:name="com.clevertap.android.sdk.Application"
         android:icon="@mipmap/ic_launcher">
         <activity
             android:name=".MainActivity"
@@ -49,7 +49,7 @@
            <intent-filter>
                <action android:name="com.google.firebase.MESSAGING_EVENT" />
            </intent-filter>
-       </service>
+       </service>-->
 
        <!--<service
            android:name="com.example.ctest2.MyFCMService"
@@ -58,6 +58,14 @@
                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
            </intent-filter>
        </service>-->
+
+       <service
+           android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
+           android:exported="true">
+           <intent-filter>
+               <action android:name="com.google.firebase.MESSAGING_EVENT"/>
+           </intent-filter>
+       </service>
 
        <meta-data
            android:name="CLEVERTAP_XIAOMI_APP_KEY"
