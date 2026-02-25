@@ -29,7 +29,6 @@ import io.flutter.embedding.android.FlutterActivity;
 import io.flutter.embedding.engine.FlutterEngine;
 import io.flutter.embedding.engine.dart.DartExecutor;
 import io.flutter.plugin.common.MethodChannel;
-import io.flutter.view.FlutterMain;
 
 public class MyApplication extends FlutterApplication {
 
@@ -38,31 +37,18 @@ public class MyApplication extends FlutterApplication {
     @Override
     public void onCreate() {
         ActivityLifecycleCallback.register(this);
+        CleverTapAPI.setDebugLevel(CleverTapAPI.LogLevel.VERBOSE);
         super.onCreate();
 
         FlutterEngine flutterEngine = new FlutterEngine(this);
         flutterEngine.getDartExecutor().executeDartEntrypoint(DartExecutor.DartEntrypoint.createDefault());
 
-        String APP_ID = getString(R.string.xiaomi_app_id);
-        String APP_KEY = getString(R.string.xiaomi_app_key);
-
-        CleverTapAPI.changeXiaomiCredentials(APP_ID, APP_KEY);
-        CleverTapAPI.enableXiaomiPushOn(PushConstants.ALL_DEVICES);
 
         if (cleverTapAPI == null) {
             cleverTapAPI = CleverTapAPI.getDefaultInstance(getApplicationContext());
         }
 
-        MiPushClient.setRegion(Region.India);
-        MiPushClient.registerPush(this, APP_ID, APP_KEY);
-        String xiaomiToken = MiPushClient.getRegId(this);
-        String xiaomiRegion = MiPushClient.getAppRegion(this);
 
-        if(cleverTapAPI != null){
-            cleverTapAPI.pushXiaomiRegistrationId(xiaomiToken, xiaomiRegion, true);
-        }else{
-            Log.e("TAG","CleverTap is NULL");
-        }
     }
 
     @Override

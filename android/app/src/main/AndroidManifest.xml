@@ -8,7 +8,7 @@
     <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
 
    <application
-        android:label="ctest2"
+        android:label="@string/appname"
         android:name="com.clevertap.android.sdk.Application"
         android:icon="@mipmap/ic_launcher">
         <activity
@@ -44,20 +44,18 @@
        <meta-data
            android:name="CLEVERTAP_TOKEN"
            android:value="Your Account Token"/>
-       <service android:name=".fcm.MyFCMService"
+
+       <meta-data
+           android:name="CLEVERTAP_BACKGROUND_SYNC"
+           android:value="1"/>
+
+       <!--<service android:name=".fcm.MyFCMService"
            android:exported="true">
            <intent-filter>
                <action android:name="com.google.firebase.MESSAGING_EVENT" />
            </intent-filter>
        </service>-->
 
-       <!--<service
-           android:name="com.example.ctest2.MyFCMService"
-           android:exported="true">
-           <intent-filter>
-               <action android:name="com.google.firebase.MESSAGING_EVENT"/>
-           </intent-filter>
-       </service>-->
 
        <service
            android:name="com.clevertap.android.sdk.pushnotification.fcm.FcmMessageListenerService"
@@ -66,15 +64,5 @@
                <action android:name="com.google.firebase.MESSAGING_EVENT"/>
            </intent-filter>
        </service>
-
-       <meta-data
-           android:name="CLEVERTAP_XIAOMI_APP_KEY"
-           android:value="@string/xiaomi_app_key" />
-       <meta-data
-           android:name="CLEVERTAP_XIAOMI_APP_ID"
-           android:value="@string/xiaomi_app_id" />
-
-
-       <receiver android:name=".xiaomi.MyXiaomiReceiver" />
    </application>
 </manifest>

@@ -15,13 +15,20 @@ public class MainActivity extends FlutterActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        //CleverTapAPI clevertapDefaultInstance = CleverTapAPI.getDefaultInstance(getApplicationContext());
+        //clevertapDefaultInstance.enableDeviceNetworkInfoReporting(true);
         CleverTapAPI.setNotificationHandler((NotificationHandler)new PushTemplateNotificationHandler());
     }
 
     @Override
     protected void onNewIntent(Intent intent) {
         super.onNewIntent(intent);
-        //CleverTapAPI.getDefaultInstance(getApplicationContext()).pushNotificationClickedEvent(intent.getExtras());
+        /**
+         * On Android 12, Raise notification clicked event when Activity is already running in activity backstack
+         */
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            CleverTapAPI.getDefaultInstance(getApplicationContext()).pushNotificationClickedEvent(intent.getExtras());
+        }
     }
 
 }

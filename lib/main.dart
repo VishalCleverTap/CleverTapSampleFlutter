@@ -7,7 +7,8 @@ import 'package:flutter/material.dart';
 import 'package:clevertap_plugin/clevertap_plugin.dart';
 import 'package:flutter/services.dart';
 //import 'package:permission_handler/permission_handler.dart';
-import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+//import 'package:mixpanel_flutter/mixpanel_flutter.dart';
+import 'package:flutter/foundation.dart' show kIsWeb;
 
 import 'package:shared_preference_app_group/shared_preference_app_group.dart';
 
@@ -68,7 +69,7 @@ class _MyHomePageState extends State<MyHomePage> {
   var title = "Home Page";
 //for killed state notification clicked
   static const platform = MethodChannel("myChannel");
-  late Mixpanel mixpanel;
+  //late Mixpanel mixpanel;
   var userId = 1;
   String appGroupID = 'group.nativeios';
   Map<String, dynamic> myParams = {
@@ -80,30 +81,57 @@ class _MyHomePageState extends State<MyHomePage> {
   void initState() {
     super.initState();
     initPlatformState();
-    activateCleverTapFlutterPluginHandlers();
-    CleverTapPlugin.setDebugLevel(3);
+
+
+    if (kIsWeb) {
+      CleverTapPlugin.init("449-WZ4-KK6Z",null,null);
+      CleverTapPlugin.setDebugLevel(3);
+
+      // enable web push
+      /*var pushData = {
+        'titleText': 'Would you like to receive Push Notifications?',
+        'bodyText':
+        'We promise to only send you relevant content and give you updates on your transactions',
+        'okButtonText': 'Ok',
+        'rejectButtonText': 'Cancel',
+        'okButtonColor': '#F28046',
+        'askAgainTimeInSeconds': 5,
+        'serviceWorkerPath': '/firebase-messaging-sw.js'
+      };
+      CleverTapPlugin.enableWebPush(pushData);*/
+
+      return;
+    } else {
+      CleverTapPlugin.enableDeviceNetworkInfoReporting(true);
+      CleverTapPlugin.setLocation(19.251921, 72.868179);
+      activateCleverTapFlutterPluginHandlers();
+      CleverTapPlugin.setDebugLevel(3);
+    }
+
     CleverTapPlugin.createNotificationChannel(
         "fluttertest", "Flutter Test", "Flutter Test", 5, true);
-    platform.setMethodCallHandler(nativeMethodCallHandler);
+    //platform.setMethodCallHandler(nativeMethodCallHandler);
     CleverTapPlugin.initializeInbox();
     CleverTapPlugin.registerForPush(); //only for iOS
     CleverTapPlugin.enablePersonalization();
     var initialUrl = CleverTapPlugin.getInitialUrl();
+
+    SharedPreferenceAppGroup.setAppGroup(appGroupID);
     /*String? string;
     CleverTapPlugin.getInitialUrl().then((result){
       string = result;
     });*/
 
-    initMixpanel();
+    //initMixpanel();
     print("CleverTap : Initial Url "+initialUrl.toString());
   }
 
-  Future<void> initMixpanel() async {
+  /*Future<void> initMixpanel() async {
     // Replace with your Project Token
     // Once you've called this method once, you can access `mixpanel` throughout the rest of your application.
     mixpanel = await Mixpanel.init("0f5a0ae8c42810c37dca1c8aafef3772",
         optOutTrackingDefault: false);
-  }
+  }*/
 
   Future<void> initPlatformState() async {
     if (!mounted) return;
@@ -272,6 +300,8 @@ class _MyHomePageState extends State<MyHomePage> {
       var data = jsonEncode(map);
       print("Push Amp Payload = " + data.toString());
       CleverTapPlugin.createNotification(data);
+
+      
     });
   }
 
@@ -545,6 +575,26 @@ class _MyHomePageState extends State<MyHomePage> {
                 title: Text("Get Event History"),
                 subtitle: Text("Get history of an event"),
                 onTap: recordEvent,
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.lightBlueAccent,
+            child: Padding(
+              padding: const EdgeInsets.all(0.0),
+              child: ListTile(
+                title: Text("Push Notifications"),
+              ),
+            ),
+          ),
+          Card(
+            color: Colors.grey.shade300,
+            child: Padding(
+              padding: const EdgeInsets.all(4.0),
+              child: ListTile(
+                title: Text("Simple Push"),
+                subtitle: Text("Pushes a simple notification"),
+                onTap: sendSimplePush,
               ),
             ),
           ),
@@ -1230,6 +1280,23 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<void> requestPermission() async {
+
+    if(kIsWeb){
+      var pushData = {
+        'titleText': 'Would you like to receive Push Notifications?',
+        'bodyText':
+        'We promise to only send you relevant content and give you updates on your transactions',
+        'okButtonText': 'Ok',
+        'rejectButtonText': 'Cancel',
+        'okButtonColor': '#F28046',
+        'askAgainTimeInSeconds': 5,
+        'serviceWorkerPath': '/firebase-messaging-sw.js'
+      };
+      CleverTapPlugin.enableWebPush(pushData);
+    }else {
+      CleverTapPlugin.promptForPushNotification(false);
+    }
+
     /*Map<Permission, PermissionStatus> statuses = await [
     Permission.notification
     //add more permission to request here.
@@ -1345,8 +1412,8 @@ class _MyHomePageState extends State<MyHomePage> {
       userId = random.nextInt(1000000000) + 1;
     }
 
-    mixpanel.identify("${userId}");
-    mixpanel.getPeople().set("CleverTap_user_id", "${userId}");
+    //mixpanel.identify("${userId}");
+    //mixpanel.getPeople().set("CleverTap_user_id", "${userId}");
   }
   void sendMixPanelEvent(){
 
@@ -1362,14 +1429,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void recordEvent() {
     var now = new DateTime.now();
+    /*var eventData = {
+      'Channel': 'Push Notification'
+    }; */
+    var specificDateLocal = DateTime(2025, 12, 25);
     var eventData = {
-      // Key:    Value
-      'first': 'partridge',
-      'second': 'turtledoves',
-      'date': CleverTapPlugin.getCleverTapDate(now),
-      'number': 1
+      'Date Property': CleverTapPlugin.getCleverTapDate(specificDateLocal)
     };
-    CleverTapPlugin.recordEvent("Flutter Event", eventData);
+    //CleverTapPlugin.recordEvent("Engagement Event", eventData);
+    CleverTapPlugin.recordEvent("Engagement Event", eventData);
     print("Raised event - Flutter Event");
   }
 
@@ -1420,25 +1488,57 @@ class _MyHomePageState extends State<MyHomePage> {
       'total': '200',
       'payment': 'cash'
     };
-    CleverTapPlugin.recordChargedEvent(chargeDetails, items);
+    var newchargedetails = {
+      "Amount": 500,
+      "Payment mode": "Credit Card",
+      "Charged ID": 24052014,
+      "Items": [
+        {
+          "Category": "Books",
+          "Book name": "The Millionaire next door",
+          "Quantity": 1
+        },
+        {
+          "Category": "Books",
+          "Book name": "Achieving inner zen",
+          "Quantity": 1
+        },
+        {
+          "Category": "Books",
+          "Book name": "Chuck it, let's do it",
+          "Quantity": 5
+        }
+      ]
+    };
+
+    CleverTapPlugin.recordEvent("Charged", newchargedetails);
+    //CleverTapPlugin.recordChargedEvent(chargeDetails, items);
     print("Raised event - Charged");
   }
 
   void recordUser() {
     var stuff = ["bags", "shoes"];
     var profile = {
-      'Name': 'sarvesh',
-      'Identity': '100',
-      'DOB': '22-04-2000',
-
-      ///Key always has to be "DOB" and format should always be dd-MM-yyyy
-      'Email': 'sarveshgk10@gmail.com',
-      'Phone': '14155551234',
-      'props': 'property1',
+      'MSG-email': 'false',
       'stuff': stuff
     };
     CleverTapPlugin.profileSet(profile);
     print("Pushed profile " + profile.toString());
+
+    var profile1 = {
+
+      'MSG-push': true
+    };
+    CleverTapPlugin.profileSet(profile1);
+
+  }
+
+  void sendSimplePush() {
+    print("sending Simple Push");
+    var eventData = {
+      'Channel': 'Push Notification'
+    };
+    CleverTapPlugin.recordEvent("Engagement Event", eventData);
   }
 
   void showInbox() {
@@ -1741,6 +1841,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void onUserLogin() {
     var stuff = ["bags", "shoes"];
+    var specificDateLocal = DateTime(2025, 12, 25);
     Random random = Random();
      userId = random.nextInt(1000000000) + 1;
      var identity = userId;
@@ -1749,6 +1850,7 @@ class _MyHomePageState extends State<MyHomePage> {
       'Name': 'Captain America',
       'Identity': identity,
       'Email': email,
+      'Registration Date' : CleverTapPlugin.getCleverTapDate(specificDateLocal),
       //'Phone': '+14155551234',
       'stuff': stuff
     };

@@ -19,13 +19,10 @@ class NotificationService: CTNotificationServiceExtension {
         let defaults = UserDefaults.init(suiteName: "group.nativeios")
             
                 let identity = defaults?.value(forKey: "identity")
-                let email = defaults?.value(forKey: "email")
-               print("email2 \(String(describing: email))")
                 
                     let profile: Dictionary<String, Any> =
                    [
-                    "Identity": identity as Any,
-                    "Email": email as Any,
+                    "Identity": identity as Any
                    ]
 
                 if(identity != nil){
